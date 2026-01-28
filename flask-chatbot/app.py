@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from openai import OpenAI
+import markdown
+from markdown.extensions.nl2br import Nl2BrExtension
+
 
 app = Flask(__name__)
 CORS(app)
@@ -720,12 +723,22 @@ def chat():
     if not user_message:
         return jsonify({'error': 'No message provided'}), 400
     
-    response = get_chat_response(user_message, session_id)
+    markdown_response = get_chat_response(user_message, session_id)
     
+    # Convert Markdown to HTML automatically
+    html_response = markdown.markdown(
+        markdown_response,
+        extensions=[
+            'nl2br',        # Convert newlines to <br>
+            'sane_lists',   # Better list handling
+            'fenced_code'   # Support for code blocks
+        ]
+    )
     return jsonify({
-        'response': response,
+        'response': html_response,
         'session_id': session_id
     })
+   
 
 @app.route('/clear', methods=['POST'])
 def clear_chat():
@@ -757,4 +770,5 @@ def widget_embed():
     </script>
     '''
 if __name__ == '__main__':
+
     app.run(debug=True, port=5000)
