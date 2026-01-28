@@ -71,10 +71,48 @@
             border-radius: 18px 18px 18px 5px;
         }
         
+        /* Style for HTML content in bot messages */
+        .bot-message .message-content p {
+            margin: 0 0 8px 0;
+        }
+        
+        .bot-message .message-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .bot-message .message-content ul,
+        .bot-message .message-content ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .bot-message .message-content li {
+            margin: 4px 0;
+        }
+        
+        .bot-message .message-content strong {
+            font-weight: 600;
+            color: #1a237e;
+        }
+        
         .user-message .message-content {
             background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
             color: white;
             border-radius: 18px 18px 5px 18px;
+        }
+        
+        /* Style for links in messages */
+        .message-content a {
+            color: #2196f3;
+            text-decoration: none;
+        }
+        
+        .user-message .message-content a {
+            color: #bbdefb;
+        }
+        
+        .message-content a:hover {
+            text-decoration: underline;
         }
         
         /* Chat input area */
@@ -226,106 +264,119 @@
             </button>
         </div>
     </div>
-
     <script>
-        // Global variables
-        let sessionId = 'widget_session_' + Date.now();
+    // Global variables
+    let sessionId = 'widget_session_' + Date.now();
+    
+    // DOM Elements
+    const chatMessages = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const typingIndicator = document.getElementById('typing-indicator');
+    const quickQuestionBtns = document.querySelectorAll('.quick-question-btn');
+    
+    // Initial welcome message (already in HTML format from backend)
+    const welcomeMessage = `<p>Hello! 👋 I'm TECHCADD, your friendly admission counselor here to help you explore the best courses, admissions process, and career opportunities at <strong>TECHCADD Computer Education Institute</strong>.</p>
+<ul>
+<li><strong>ISO 9001:2015 Certified, MSME Registered, Government Approved Institute</strong></li>
+<li>11+ years of experience in Jalandhar, Punjab</li>
+<li>100% placement assistance, industry projects, and live workshops</li>
+</ul>
+<p>How can I assist you today? Are you looking for course recommendations, admission details, or anything else? Feel free to let me know!</p>
+<p>📞 Phone: <a href="tel:+919888122255">+91 9888122255</a><br>
+📧 Email: <a href="mailto:info@techcadd.com">info@techcadd.com</a><br>
+🏢 2nd Floor, Crystal Plaza, SCS 78, opp. Pims Hospital, Jalandhar, Punjab 144001</p>
+<p>Looking forward to helping you start your learning journey!</p>`;
+    
+    // Initialize chat
+    function initChat() {
+        addMessage(welcomeMessage, false);
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
         
-        // DOM Elements
-        const chatMessages = document.getElementById('chat-messages');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const typingIndicator = document.getElementById('typing-indicator');
-        const quickQuestionBtns = document.querySelectorAll('.quick-question-btn');
-        
-        // Initial welcome message
-        const welcomeMessage = `Hello! I'm your assistant from <strong>TechCADD Computer Education</strong>.<br><br>
-        I can help you with:<br>
-        • Course information and fees<br>
-        • Admission process<br>
-        • Placement assistance<br>
-        • Certification details<br>
-        • Institute facilities<br><br>
-        How can I help you today?`;
-        
-        // Initialize chat
-        function initChat() {
-            addMessage(welcomeMessage, false);
-            sendButton.addEventListener('click', sendMessage);
-            userInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') sendMessage();
+        // Quick question buttons
+        quickQuestionBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const question = this.getAttribute('data-question');
+                userInput.value = question;
+                sendMessage();
             });
-            
-            // Quick question buttons
-            quickQuestionBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const question = this.getAttribute('data-question');
-                    userInput.value = question;
-                    sendMessage();
-                });
-            });
-            
-            // Focus input
-            userInput.focus();
+        });
+        
+        // Focus input
+        userInput.focus();
+    }
+    
+    // Add message to chat - SUPER SIMPLE!
+    function addMessage(content, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+        
+        const messageContentDiv = document.createElement('div');
+        messageContentDiv.className = 'message-content';
+        
+        if (isUser) {
+            // For user messages, just show plain text
+            messageContentDiv.textContent = content;
+        } else {
+            // For bot messages, just insert the HTML (already converted on backend)
+            messageContentDiv.innerHTML = content;
         }
         
-        // Add message to chat
-        function addMessage(content, isUser = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-            
-            messageDiv.innerHTML = `
-                <div class="message-content">${content}</div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+        messageDiv.appendChild(messageContentDiv);
+        chatMessages.appendChild(messageDiv);
         
-        // Send message to backend
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) return;
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Send message to backend
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        addMessage(message, true);
+        userInput.value = '';
+        
+        // Show typing indicator
+        typingIndicator.style.display = 'flex';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    session_id: sessionId
+                })
+            });
             
-            // Add user message
-            addMessage(message, true);
-            userInput.value = '';
+            const data = await response.json();
             
-            // Show typing indicator
-            typingIndicator.style.display = 'flex';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            // Hide typing indicator
+            typingIndicator.style.display = 'none';
             
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        session_id: sessionId
-                    })
-                });
-                
-                const data = await response.json();
-                
-                // Hide typing indicator
-                typingIndicator.style.display = 'none';
-                
-                // Add bot response
-                if (data.response) {
-                    addMessage(data.response, false);
-                } else {
-                    addMessage('Sorry, I encountered an error. Please try again.', false);
-                }
-            } catch (error) {
-                typingIndicator.style.display = 'none';
-                addMessage('Network error. Please check your connection.', false);
+            // Add bot response - already in HTML format from backend!
+            if (data.response) {
+                addMessage(data.response, false);
+            } else {
+                addMessage('<p>Sorry, I encountered an error. Please try again.</p>', false);
             }
+        } catch (error) {
+            console.error('Error:', error);
+            typingIndicator.style.display = 'none';
+            addMessage('<p>Network error. Please check your connection.</p>', false);
         }
-        
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initChat);
-    </script>
+    }
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', initChat);
+</script>
 </body>
 </html>
