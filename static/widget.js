@@ -8,7 +8,7 @@
             </button>
             <div id="techcadd-chat-window" style="display: none; position: absolute; bottom: 70px; right: 0; width: 350px; height: 500px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); flex-direction: column; overflow: hidden; border: 1px solid #e0e0e0;">
                 <!-- Chat content will be loaded via iframe -->
-                <iframe src="http://52.21.137.204/widget" style="width: 100%; height: 100%; border: none;"></iframe>
+                <iframe src="https://chatbott.techcadd.com/widget" style="width: 100%; height: 100%; border: none;"></iframe>
             </div>
         </div>
     `;
