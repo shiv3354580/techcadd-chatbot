@@ -763,7 +763,7 @@ def widget_embed():
     <script>
         (function() {
             var d = document, s = d.createElement('script');
-            s.src = 'http://52.21.137.204/static/widget.js';  // Your widget JS
+            s.src = 'https://chatbott.techcadd.com//static/widget.js';  // Your widget JS
             s.async = true;
             d.getElementsByTagName('head')[0].appendChild(s);
         })();
